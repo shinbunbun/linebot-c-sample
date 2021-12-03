@@ -1,6 +1,6 @@
-#include <openssl/opensslv.h>
+#include "server.c"
 
 int main(void)
 {
-  printf("version: %s \n", OPENSSL_VERSION_TEXT);
+  return server();
 }
