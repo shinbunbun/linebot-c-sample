@@ -21,7 +21,7 @@ int server()
   SSL *ssl;
 
   int server, client, sd;
-  int port = 8765;
+  int port = 443;
   char crt_file[] = "cert/server.crt";
   char key_file[] = "cert/server.key";
 
