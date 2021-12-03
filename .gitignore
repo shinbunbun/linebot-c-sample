@@ -5,3 +5,4 @@ server.csr
 server.key
 main
 cert
+*.out
