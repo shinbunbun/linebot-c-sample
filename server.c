@@ -22,8 +22,8 @@ int server()
 
   int server, client, sd;
   int port = 8765;
-  char crt_file[] = "cert/server.crt";
-  char key_file[] = "cert/server.key";
+  char crt_file[] = "cert/fullchain1.pem";
+  char key_file[] = "cert/key.pem";
 
   struct sockaddr_in addr;
   socklen_t size = sizeof(struct sockaddr_in);
@@ -39,7 +39,7 @@ int server()
   OpenSSL_add_all_algorithms();
 
   ctx = SSL_CTX_new(SSLv23_server_method());
-  SSL_CTX_use_certificate_file(ctx, crt_file, SSL_FILETYPE_PEM);
+  SSL_CTX_use_certificate_chain_file(ctx, crt_file);
   SSL_CTX_use_PrivateKey_file(ctx, key_file, SSL_FILETYPE_PEM);
 
   server = socket(PF_INET, SOCK_STREAM, 0);
