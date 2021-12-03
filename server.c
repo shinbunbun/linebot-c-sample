@@ -22,8 +22,8 @@ int server()
 
   int server, client, sd;
   int port = 8765;
-  char crt_file[] = "server.crt";
-  char key_file[] = "server.key";
+  char crt_file[] = "cert/server.crt";
+  char key_file[] = "cert/server.key";
 
   struct sockaddr_in addr;
   socklen_t size = sizeof(struct sockaddr_in);
