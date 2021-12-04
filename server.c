@@ -9,6 +9,8 @@
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 
+#include "message.c"
+
 typedef struct
 {
   char *body;
@@ -28,10 +30,14 @@ int server()
   struct sockaddr_in addr;
   socklen_t size = sizeof(struct sockaddr_in);
 
-  char buf[1024];
+  char buf[(int)1e5];
 
-  char body[] = "hello world";
-  char header[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 11\r\nConnection: Close\r\n";
+  /* char body[] = "hello world"; */
+  char header1[] = "HTTP/1.1 200 OK\r\nContent-Type: application/json";
+  char header2[] = "GET /v2/bot/message/reply HTTP/1.1\r\nHost: api.line.me\r\nContent-Type: application/json\r\nAuthorization: Bearer ";
+  char *token = getenv("TOKEN");
+  strcat(header2, token);
+  printf("%s\n", header2);
   char msg[1024];
 
   SSL_load_error_strings();
@@ -66,9 +72,37 @@ int server()
 
     if (SSL_accept(ssl) > 0)
     {
-      SSL_read(ssl, buf, sizeof(buf));
+      // rが0になるまで読み込まないとダメっぽい（なぜ？）
+      for (int i = 0;; i++)
+      {
+        char temp[(int)1e5];
+        int r = SSL_read(ssl, temp, sizeof(buf));
+        if (r == 0)
+          break;
+        if (i == 1)
+        {
+          strcpy(buf, temp);
+        }
+      }
       printf("%s\n", buf);
-      snprintf(msg, sizeof(msg), "%s\r\n%s", header, body);
+
+      char text[1000], reply_token[100];
+      parse(buf, text, reply_token);
+      printf("text: %s, reply_token: %s\n", text, reply_token);
+
+      char body[1000];
+
+      strcpy(body, "{\"replyToken\":\"");
+      strcat(body, reply_token);
+      strcat(body, "\",\"messages\":[{\"type\":\"text\",\"text\":\"");
+      strcat(body, text);
+      strcat(body, "\"}]}");
+
+      printf("body: %s\n", body);
+
+      reply(header2, body);
+
+      snprintf(msg, sizeof(msg), "%s\r\n%s", header1, "Hello!");
       SSL_write(ssl, msg, strlen(msg));
     }
 
