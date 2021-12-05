@@ -11,12 +11,6 @@
 
 #include "message.c"
 
-typedef struct
-{
-  char *body;
-  char *header;
-} httpResponse;
-
 int server()
 {
   SSL_CTX *ctx;
@@ -30,15 +24,8 @@ int server()
   struct sockaddr_in addr;
   socklen_t size = sizeof(struct sockaddr_in);
 
-  char buf[(int)1e5];
-
   /* char body[] = "hello world"; */
-  char header1[] = "HTTP/1.1 200 OK\r\nContent-Type: application/json";
-  char header2[] = "GET /v2/bot/message/reply HTTP/1.1\r\nHost: api.line.me\r\nContent-Type: application/json\r\nAuthorization: Bearer ";
-  char *token = getenv("TOKEN");
-  strcat(header2, token);
-  printf("%s\n", header2);
-  char msg[1024];
+  /* printf("%s\n", header2); */
 
   SSL_load_error_strings();
   SSL_library_init();
@@ -60,6 +47,22 @@ int server()
   while (1)
   {
 
+    printf("\n\n\n-------------waiting for client...-------------\n");
+
+    char *msg = (char *)malloc(sizeof(char) * 1024);
+
+    char header1[] = "HTTP/1.1 200 OK\nContent-Type: application/json";
+    char *header2 = (char *)malloc(sizeof(char) * 1024);
+    strcpy(header2, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
+    /* printf("%s\n", header2); */
+    char *token = getenv("TOKEN");
+    strcat(header2, token);
+    strcat(header2, "\0");
+    /* printf("\n%s\n", header2); */
+
+    char *buf = (char *)malloc(sizeof(char) * 1e5);
+    /* char buf[(int)1e5]; */
+    printf("-----------buf-----------\n%s\n-------------------------\n", buf);
     client = accept(server, (struct sockaddr *)&addr, &size);
 
     printf(
@@ -72,25 +75,32 @@ int server()
 
     if (SSL_accept(ssl) > 0)
     {
-      // rが0になるまで読み込まないとダメっぽい（なぜ？）
+      // rが0になるまで読み込まないとダメっぽい
       for (int i = 0;; i++)
       {
-        char temp[(int)1e5];
-        int r = SSL_read(ssl, temp, sizeof(buf));
+        /* char temp[(int)1e5]; */
+        char *temp = (char *)malloc(sizeof(char) * 1e5);
+        /* printf(sizeof(temp)); */
+        int r = SSL_read(ssl, temp, (int)1e5);
         if (r == 0)
           break;
         if (i == 1)
         {
+          printf("%s\n", temp);
           strcpy(buf, temp);
         }
+        free(temp);
       }
-      printf("%s\n", buf);
+      printf("-----------buf-----------\n%s\n-------------------------\n", buf);
 
-      char text[1000], reply_token[100];
+      char *text = (char *)malloc(sizeof(char) * 1024);
+      char *reply_token = (char *)malloc(sizeof(char) * 1024);
+      printf("text: %s\nreply_token: %s\n", text, reply_token);
       parse(buf, text, reply_token);
       printf("text: %s, reply_token: %s\n", text, reply_token);
 
-      char body[1000];
+      char *body = (char *)malloc(sizeof(char) * 1024);
+      printf("%s\n", body);
 
       strcpy(body, "{\"replyToken\":\"");
       strcat(body, reply_token);
@@ -102,8 +112,14 @@ int server()
 
       reply(header2, body);
 
-      snprintf(msg, sizeof(msg), "%s\r\n%s", header1, "Hello!");
+      int sres = snprintf(msg, sizeof(msg), "%s\n%s", header1, "Hello!");
       SSL_write(ssl, msg, strlen(msg));
+
+      free(msg);
+      free(header2);
+      free(buf);
+      free(reply_token);
+      free(body);
     }
 
     sd = SSL_get_fd(ssl);

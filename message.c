@@ -24,7 +24,7 @@ void reply(char *header, char *body)
   SSL *ssl;
   SSL_CTX *ctx;
 
-  char msg[100];
+  char msg[1000];
 
   char *host = "api.line.me";
   char *path = "/v2/bot/message/reply";
@@ -40,19 +40,19 @@ void reply(char *header, char *body)
   if ((err = getaddrinfo(host, service, &hints, &res)) != 0)
   {
     fprintf(stderr, "Fail to resolve ip address - %d\n", err);
-    return EXIT_FAILURE;
+    return;
   }
 
   if ((mysocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
   {
     fprintf(stderr, "Fail to create a socket.\n");
-    return EXIT_FAILURE;
+    return;
   }
 
   if (connect(mysocket, res->ai_addr, res->ai_addrlen) != 0)
   {
     printf("Connection error.\n");
-    return EXIT_FAILURE;
+    return;
   }
 
   SSL_load_error_strings();
@@ -65,22 +65,43 @@ void reply(char *header, char *body)
 
   printf("Conntect to %s\n", host);
 
-  snprintf(msg, sizeof(msg), "%s\r\n%s", header, body);
+  strcat(header, "\nContent-Length: ");
+  char l[1000];
+  sprintf(l, "%ld", strlen(body));
+  strcat(header, l);
+  strcat(header, "\n");
+
+  snprintf(msg, sizeof(msg), "%s\n%s", header, body);
+  printf("%s\n", body);
+  printf("%s\n", msg);
   SSL_write(ssl, msg, strlen(msg));
 
   int buf_size = 256;
   char buf[buf_size];
   int read_size;
 
-  int response_len;
-
-  while ((response_len = SSL_read(ssl, buf, 1024 - 1)) > 0)
-  { /* SSL_readで読み込んだレスポンスをresponse_bufに格納.(1バイト以上なら続ける.) */
-
-    /* response_bufの内容を出力. */
-    printf("%s", buf);                   /* printfでresponse_bufを出力. */
-    memset(buf, 0, sizeof(char) * 1024); /* memsetでresponse_bufをクリア. */
+  while (1)
+  {
+    /* SSLデータ受信 */
+    int sslret = SSL_read(ssl, buf, buf_size);
+    int ssl_eno = SSL_get_error(ssl, sslret);
+    switch (ssl_eno)
+    {
+    case SSL_ERROR_NONE:
+      break;
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE:
+    case SSL_ERROR_SYSCALL:
+      continue;
+    }
+    break;
   }
+
+  /* do
+  {
+    read_size = SSL_read(ssl, buf, buf_size); // ここに時間かかってる？
+    write(1, buf, read_size);
+  } while (read_size > 0); */
 
   SSL_shutdown(ssl);
   SSL_free(ssl);
@@ -102,7 +123,7 @@ void parse(char *buf, char *text, char *reply_token)
   if (root == NULL)
   {
     printf("[ERR]json load FAILED\n");
-    return 1;
+    return;
   }
 
   int events_size = json_array_size(json_object_get(root, "events"));
