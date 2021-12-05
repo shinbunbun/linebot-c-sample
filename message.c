@@ -15,7 +15,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-void reply(char *header, char *body)
+#define BUF_SIZE 1024
+
+void reply(char *body)
 {
   int mysocket;
   struct sockaddr_in server;
@@ -25,6 +27,17 @@ void reply(char *header, char *body)
   SSL_CTX *ctx;
 
   char msg[1000];
+
+  // 環境変数からLINEのアクセストークンを取得
+  char *token = getenv("TOKEN");
+
+  // reply APIにわたすヘッダを作成
+  char *header = (char *)malloc(sizeof(char) * BUF_SIZE);
+  strcpy(header, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
+  /* printf("%s\n", header2); */
+  strcat(header, token);
+  strcat(header, "\0");
+  /* printf("\n%s\n", header2); */
 
   char *host = "api.line.me";
   char *path = "/v2/bot/message/reply";
@@ -117,7 +130,7 @@ void parse(char *buf, char *text, char *reply_token)
   json_error_t error;
   json_t *root;
 
-  // JSONファイルをew読み込む
+  // JSONファイルを読み込む
   root = json_loadb(buf, strlen(buf), 0, &error);
   // NULL=読込み失敗
   if (root == NULL)
@@ -126,22 +139,33 @@ void parse(char *buf, char *text, char *reply_token)
     return;
   }
 
+  // eventsの配列サイズ分ループを回す
   int events_size = json_array_size(json_object_get(root, "events"));
   for (int i = 0; i < events_size; i++)
   {
+    // eventを取得
     json_t *event = json_array_get(json_object_get(root, "events"), i);
 
+    // event typeを取得
     const char *type = json_string_value(json_object_get(event, "type"));
+    // responseを作成
     struct event *response;
+
+    // event typeがメッセージだった場合
     if (strcmp("message", type) == 0)
     {
+      // messageオブジェクトを取得
       json_t *message = json_object_get(event, "message");
+      // message typeを取得
       const char *message_type = json_string_value(json_object_get(message, "type"));
       // printf("%s\n", message_type);
+      // message typeがtextだった場合
       if (strcmp("text", message_type) == 0)
       {
+        // textを取得
         strcpy(text, json_string_value(json_object_get(message, "text")));
         // printf("%s\n", text);
+        // reply_tokenを取得
         strcpy(reply_token, json_string_value(json_object_get(event, "replyToken")));
       }
     }
