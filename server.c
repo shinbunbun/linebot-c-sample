@@ -11,13 +11,16 @@
 
 #include "message.c"
 
+#define PORT 8765
+#define BUF_SIZE 1024
+#define LARGE_BUF_SIZE (int)1e5
+
 int server()
 {
   SSL_CTX *ctx;
   SSL *ssl;
 
   int server, client, sd;
-  int port = 8765;
   char crt_file[] = "cert/fullchain1.pem";
   char key_file[] = "cert/key.pem";
 
@@ -39,23 +42,24 @@ int server()
   bzero(&addr, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons(port);
+  addr.sin_port = htons(PORT);
 
   bind(server, (struct sockaddr *)&addr, sizeof(addr));
   listen(server, 10);
+
+  char header1[] = "HTTP/1.1 200 OK\nContent-Type: application/json";
+  char *token = getenv("TOKEN");
 
   while (1)
   {
 
     printf("\n\n\n-------------waiting for client...-------------\n");
 
-    char *msg = (char *)malloc(sizeof(char) * 1024);
+    char *msg = (char *)malloc(sizeof(char) * BUF_SIZE);
 
-    char header1[] = "HTTP/1.1 200 OK\nContent-Type: application/json";
-    char *header2 = (char *)malloc(sizeof(char) * 1024);
+    char *header2 = (char *)malloc(sizeof(char) * BUF_SIZE);
     strcpy(header2, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
     /* printf("%s\n", header2); */
-    char *token = getenv("TOKEN");
     strcat(header2, token);
     strcat(header2, "\0");
     /* printf("\n%s\n", header2); */
@@ -81,7 +85,7 @@ int server()
         /* char temp[(int)1e5]; */
         char *temp = (char *)malloc(sizeof(char) * 1e5);
         /* printf(sizeof(temp)); */
-        int r = SSL_read(ssl, temp, (int)1e5);
+        int r = SSL_read(ssl, temp, LARGE_BUF_SIZE);
         if (r == 0)
           break;
         if (i == 1)
@@ -93,13 +97,13 @@ int server()
       }
       printf("-----------buf-----------\n%s\n-------------------------\n", buf);
 
-      char *text = (char *)malloc(sizeof(char) * 1024);
-      char *reply_token = (char *)malloc(sizeof(char) * 1024);
+      char *text = (char *)malloc(sizeof(char) * BUF_SIZE);
+      char *reply_token = (char *)malloc(sizeof(char) * BUF_SIZE);
       printf("text: %s\nreply_token: %s\n", text, reply_token);
       parse(buf, text, reply_token);
       printf("text: %s, reply_token: %s\n", text, reply_token);
 
-      char *body = (char *)malloc(sizeof(char) * 1024);
+      char *body = (char *)malloc(sizeof(char) * BUF_SIZE);
       printf("%s\n", body);
 
       strcpy(body, "{\"replyToken\":\"");
