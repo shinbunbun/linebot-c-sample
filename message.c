@@ -95,7 +95,7 @@ void reply(char *body)
   // SSL/TLSハンドシェイクを開始
   SSL_connect(ssl);
 
-  printf("Conntect to %s\n", host);
+  /* printf("Conntect to %s\n", host); */
 
   // headerにContent-Lengthを追加
   strcat(header, "\nContent-Length: ");
@@ -106,21 +106,18 @@ void reply(char *body)
 
   // 送信するリクエストを作成
   snprintf(msg, sizeof(msg), "%s\n%s", header, body);
-  printf("%s\n", body);
-  printf("%s\n", msg);
+  /* printf("%s\n", body);
+  printf("%s\n", msg); */
   // sslにバッファ（msg）を書き込む
   SSL_write(ssl, msg, strlen(msg));
-
-  // データ書き込み用
-  int buf_size = 256;
-  char buf[buf_size];
-  int read_size;
 
   // データ受信
   while (1)
   {
     /* SSLデータ受信 */
-    int sslret = SSL_read(ssl, buf, buf_size);
+    char *temp = (char *)malloc(sizeof(char) * 1e5);
+    int sslret = SSL_read(ssl, temp, 1e5);
+    printf("%s", temp);
     int ssl_eno = SSL_get_error(ssl, sslret);
     switch (ssl_eno)
     {
@@ -133,6 +130,7 @@ void reply(char *body)
     }
     break;
   }
+  printf("\n");
 
   // TLS/SSLコネクションをシャットダウンする
   SSL_shutdown(ssl);
