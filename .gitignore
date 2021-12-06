@@ -6,3 +6,4 @@ server.key
 main
 cert
 *.out
+out
