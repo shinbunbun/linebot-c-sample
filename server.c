@@ -151,21 +151,29 @@ int server()
       // reply
       reply(body);
 
+      // レスポンスを生成
       int sres = snprintf(msg, sizeof(msg), "%s\n%s", header1, "Hello!");
+      // sslにバッファ（msg）を書き込む
       SSL_write(ssl, msg, strlen(msg));
 
+      // 諸々解放
       free(msg);
       free(buf);
       free(reply_token);
       free(body);
     }
 
+    // ソケット識別子を取得
     int sd = SSL_get_fd(ssl);
+    // sslを解放
     SSL_free(ssl);
+    // ソケットを閉じる
     close(sd);
   }
 
+  // serverのソケットを閉じる
   close(server);
+  // ctxを解放
   SSL_CTX_free(ctx);
 
   return EXIT_SUCCESS;

@@ -17,15 +17,23 @@
 
 #define BUF_SIZE 1024
 
+char *host = "api.line.me";
+int port = 443;
+
 void reply(char *body)
 {
   int mysocket;
+  // IPアドレス、ポート番号が入る構造体
   struct sockaddr_in server;
+  // sockaddrをリンクリストで保持する構造体
   struct addrinfo hints, *res;
 
+  // SSLconnectionごとに生成される構造体
   SSL *ssl;
+  // SSLのコンテキスト構造体
   SSL_CTX *ctx;
 
+  // 送信するリクエスト
   char msg[1000];
 
   // 環境変数からLINEのアクセストークンを取得
@@ -39,60 +47,76 @@ void reply(char *body)
   strcat(header, "\0");
   /* printf("\n%s\n", header2); */
 
-  char *host = "api.line.me";
   char *path = "/v2/bot/message/reply";
-  int port = 443;
 
   // IPアドレスの解決
   memset(&hints, 0, sizeof(hints));
+  // IPv4
   hints.ai_family = AF_INET;
+  // TCP
   hints.ai_socktype = SOCK_STREAM;
+  // https
   char *service = "https";
 
   int err = 0;
+  // IPアドレスの解決
   if ((err = getaddrinfo(host, service, &hints, &res)) != 0)
   {
     fprintf(stderr, "Fail to resolve ip address - %d\n", err);
     return;
   }
 
+  // ソケットの作成
   if ((mysocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
   {
     fprintf(stderr, "Fail to create a socket.\n");
     return;
   }
 
+  // TCPのconnectionを貼る
   if (connect(mysocket, res->ai_addr, res->ai_addrlen) != 0)
   {
     printf("Connection error.\n");
     return;
   }
 
+  // libcryptoの全ての関数の全てのエラーメッセージをload
   SSL_load_error_strings();
+  // 使用可能なcipherとdigestアルゴリズムを登録
   SSL_library_init();
 
+  // SSL_CTXオブジェクトを生成
+  // TLSはクライアントが対応している最高のバージョンが設定される
   ctx = SSL_CTX_new(SSLv23_client_method());
+  // SSL構造体を生成
   ssl = SSL_new(ctx);
+  // SSL構造体にファイルディスクリプター（ソケット識別子）を設定
   err = SSL_set_fd(ssl, mysocket);
+  // SSL/TLSハンドシェイクを開始
   SSL_connect(ssl);
 
   printf("Conntect to %s\n", host);
 
+  // headerにContent-Lengthを追加
   strcat(header, "\nContent-Length: ");
   char l[1000];
   sprintf(l, "%ld", strlen(body));
   strcat(header, l);
   strcat(header, "\n");
 
+  // 送信するリクエストを作成
   snprintf(msg, sizeof(msg), "%s\n%s", header, body);
   printf("%s\n", body);
   printf("%s\n", msg);
+  // sslにバッファ（msg）を書き込む
   SSL_write(ssl, msg, strlen(msg));
 
+  // データ書き込み用
   int buf_size = 256;
   char buf[buf_size];
   int read_size;
 
+  // データ受信
   while (1)
   {
     /* SSLデータ受信 */
@@ -110,17 +134,14 @@ void reply(char *body)
     break;
   }
 
-  /* do
-  {
-    read_size = SSL_read(ssl, buf, buf_size); // ここに時間かかってる？
-    write(1, buf, read_size);
-  } while (read_size > 0); */
-
+  // TLS/SSLコネクションをシャットダウンする
   SSL_shutdown(ssl);
+  // sslの参照カウントをデクリメント
   SSL_free(ssl);
+  // ctxの参照カウントをデクリメント
   SSL_CTX_free(ctx);
-  ERR_free_strings();
 
+  // ソケットをクローズ
   close(mysocket);
 }
 
