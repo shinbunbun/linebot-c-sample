@@ -12,7 +12,8 @@
         "${fileDirname}/${fileBasenameNoExtension}",
         "-lssl",
         "-lcrypto",
-        "-ljansson"
+        "-ljansson",
+        "-lresolv"
       ],
       "options": {
         "cwd": "${fileDirname}"

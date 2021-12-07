@@ -5,6 +5,7 @@
     "socket.h": "c",
     "jansson.h": "c",
     "type_traits": "c",
-    "unistd.h": "c"
+    "unistd.h": "c",
+    "in.h": "c"
   }
 }

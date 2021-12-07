@@ -1,3 +1,5 @@
+/* https://ken-ohwada.hatenadiary.org/entry/2021/02/27/113436 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +12,7 @@
 #include <openssl/crypto.h>
 
 #include "message.c"
+#include "hmac.c"
 
 #define PORT 8765
 #define BUF_SIZE 1024
@@ -92,9 +95,9 @@ void create_reply_body(char *body, char *text, char *reply_token)
   /* printf("body: %s\n", body); */
 }
 
-void receive_SSL_data(SSL *ssl, char *buf)
+void receive_SSL_data(SSL *ssl, char *header, char *body)
 {
-  printf("【Request】\n");
+  printf("\n【Request】\n");
   for (int i = 0;; i++)
   {
     // クライアントからのデータをいれるメモリを確保
@@ -107,14 +110,26 @@ void receive_SSL_data(SSL *ssl, char *buf)
     printf("%s", temp);
     if (r == 0)
       break;
+    if (i == 0)
+    {
+      strcpy(header, temp);
+    }
     if (i == 1)
     {
       // bodyを取得
-      strcpy(buf, temp);
+      strcpy(body, temp);
     }
     free(temp);
   }
   printf("\n");
+}
+
+void get_x_line_signature(char *header, char *x_line_signature)
+{
+  // headerからx-line-signatureを取得
+  char *tmp = strstr(header, "x-line-signature");
+  strncpy(x_line_signature, &tmp[18], 44);
+  x_line_signature[44] = '\0';
 }
 
 void wait_connect(struct server_info *my_server_info)
@@ -129,6 +144,7 @@ void wait_connect(struct server_info *my_server_info)
     char *msg = (char *)malloc(sizeof(char) * BUF_SIZE);
     // リクエストデータ用のメモリを確保
     char *buf = (char *)malloc(sizeof(char) * 1e5);
+    char *receive_header = (char *)malloc(sizeof(char) * 1e5);
     // ソケットの接続を待つ
     // addrにはクライアントのIPアドレスとポート番号が入る
     // clientにはクライアントのソケットの識別子が入る
@@ -146,7 +162,25 @@ void wait_connect(struct server_info *my_server_info)
     // TODO: エラーハンドリング
     if (SSL_accept(ssl) > 0)
     {
-      receive_SSL_data(ssl, buf);
+      receive_SSL_data(ssl, receive_header, buf);
+
+      // ヘッダから署名取り出し
+      char x_line_signature[45];
+      get_x_line_signature(receive_header, x_line_signature);
+
+      // HMAC生成
+      char sig[45];
+      create_hmac(buf, sig, sizeof(sig));
+      // HMAC検証
+      if (strcmp(sig, x_line_signature) == 0)
+      {
+        printf("\nHMAC is valid\nHMAC: %s\n", sig);
+      }
+      else
+      {
+        fprintf(stderr, "\nHMAC is invalid\nx_line_signature: %s[end]\nsig: %s[end]\n", x_line_signature, sig);
+        continue;
+      }
 
       // replyAPIに渡すbody用のメモリを確保
       char *body = (char *)malloc(sizeof(char) * BUF_SIZE);

@@ -15,6 +15,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "verify.c"
+
 #define BUF_SIZE 1024
 
 char *host = "api.line.me";
@@ -88,8 +90,17 @@ void reply(char *body)
   // SSL_CTXオブジェクトを生成
   // TLSはクライアントが対応している最高のバージョンが設定される
   ctx = SSL_CTX_new(SSLv23_client_method());
+  // 証明書読み込み
+  SSL_CTX_load_verify_locations(ctx, "line_server_cert/rootcacert_r3.pem", NULL);
+  printf("【Certificate】\n\n");
+  // サーバ証明書の検証
+  SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, verify_callback);
   // SSL構造体を生成
   ssl = SSL_new(ctx);
+  // ホスト名検証を行うようにする
+  enable_hostname_validation(ssl, host);
+  // For SNI
+  SSL_set_tlsext_host_name(ssl, host);
   // SSL構造体にファイルディスクリプター（ソケット識別子）を設定
   err = SSL_set_fd(ssl, mysocket);
   // SSL/TLSハンドシェイクを開始
@@ -111,6 +122,7 @@ void reply(char *body)
   // sslにバッファ（msg）を書き込む
   SSL_write(ssl, msg, strlen(msg));
 
+  printf("\n\n");
   // データ受信
   while (1)
   {
