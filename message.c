@@ -17,7 +17,7 @@
 
 #include "verify.c"
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 10000
 
 char *host = "api.line.me";
 int port = 443;
@@ -36,7 +36,7 @@ void reply(char *body)
   SSL_CTX *ctx;
 
   // 送信するリクエスト
-  char msg[1000];
+  char msg[20000];
 
   // 環境変数からLINEのアクセストークンを取得
   char *token = getenv("TOKEN");
@@ -110,7 +110,7 @@ void reply(char *body)
 
   // headerにContent-Lengthを追加
   strcat(header, "\nContent-Length: ");
-  char l[1000];
+  char l[2000];
   sprintf(l, "%ld", strlen(body));
   strcat(header, l);
   strcat(header, "\n");
@@ -119,6 +119,7 @@ void reply(char *body)
   snprintf(msg, sizeof(msg), "%s\n%s", header, body);
   /* printf("%s\n", body);
   printf("%s\n", msg); */
+  printf("%s\n", msg);
   // sslにバッファ（msg）を書き込む
   SSL_write(ssl, msg, strlen(msg));
 

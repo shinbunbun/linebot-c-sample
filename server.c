@@ -15,7 +15,6 @@
 #include "hmac.c"
 
 #define PORT 8765
-#define BUF_SIZE 1024
 #define LARGE_BUF_SIZE (int)1e5
 
 struct server_info
@@ -184,7 +183,6 @@ void wait_connect(struct server_info *my_server_info)
 
       // replyAPIに渡すbody用のメモリを確保
       char *body = (char *)malloc(sizeof(char) * BUF_SIZE);
-      printf("%s\n", body);
 
       // メッセージ、リプライトークンを格納するメモリを確保
       char *text = (char *)malloc(sizeof(char) * BUF_SIZE);
