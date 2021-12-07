@@ -15,7 +15,6 @@
 #include "hmac.c"
 
 #define PORT 8765
-#define LARGE_BUF_SIZE (int)1e5
 
 struct server_info
 {
@@ -101,7 +100,7 @@ void receive_SSL_data(SSL *ssl, char *header, char *body)
   {
     // クライアントからのデータをいれるメモリを確保
     /* char temp[(int)1e5]; */
-    char *temp = (char *)malloc(sizeof(char) * 1e5);
+    char *temp = (char *)malloc(sizeof(char) * LARGE_BUF_SIZE);
     /* printf(sizeof(temp)); */
 
     /* SSLデータ受信 */
@@ -140,10 +139,10 @@ void wait_connect(struct server_info *my_server_info)
     printf("-------------waiting for client...-------------\n");
 
     // レスポンス用のメモリを確保
-    char *msg = (char *)malloc(sizeof(char) * BUF_SIZE);
+    char *msg = (char *)malloc(sizeof(char) * LARGE_BUF_SIZE);
     // リクエストデータ用のメモリを確保
-    char *buf = (char *)malloc(sizeof(char) * 1e5);
-    char *receive_header = (char *)malloc(sizeof(char) * 1e5);
+    char *buf = (char *)malloc(sizeof(char) * BODY_SIZE);
+    char *receive_header = (char *)malloc(sizeof(char) * HEADER_SIZE);
     // ソケットの接続を待つ
     // addrにはクライアントのIPアドレスとポート番号が入る
     // clientにはクライアントのソケットの識別子が入る
@@ -182,11 +181,11 @@ void wait_connect(struct server_info *my_server_info)
       }
 
       // replyAPIに渡すbody用のメモリを確保
-      char *body = (char *)malloc(sizeof(char) * BUF_SIZE);
+      char *body = (char *)malloc(sizeof(char) * BODY_SIZE);
 
       // メッセージ、リプライトークンを格納するメモリを確保
-      char *text = (char *)malloc(sizeof(char) * BUF_SIZE);
-      char *reply_token = (char *)malloc(sizeof(char) * BUF_SIZE);
+      char *text = (char *)malloc(sizeof(char) * 10001);
+      char *reply_token = (char *)malloc(sizeof(char) * 33);
       // JSONをパースしてtextとreply_tokenを取得
       parse(buf, text, reply_token);
 

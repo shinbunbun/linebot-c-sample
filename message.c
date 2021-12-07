@@ -17,7 +17,9 @@
 
 #include "verify.c"
 
-#define BUF_SIZE 10000
+#define HEADER_SIZE 8001
+#define BODY_SIZE 22001
+#define LARGE_BUF_SIZE (HEADER_SIZE + BODY_SIZE)
 
 char *host = "api.line.me";
 int port = 443;
@@ -36,13 +38,13 @@ void reply(char *body)
   SSL_CTX *ctx;
 
   // 送信するリクエスト
-  char msg[20000];
+  char msg[LARGE_BUF_SIZE];
 
   // 環境変数からLINEのアクセストークンを取得
   char *token = getenv("TOKEN");
 
   // reply APIにわたすヘッダを作成
-  char *header = (char *)malloc(sizeof(char) * BUF_SIZE);
+  char *header = (char *)malloc(sizeof(char) * HEADER_SIZE);
   strcpy(header, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
   /* printf("%s\n", header2); */
   strcat(header, token);
@@ -110,7 +112,7 @@ void reply(char *body)
 
   // headerにContent-Lengthを追加
   strcat(header, "\nContent-Length: ");
-  char l[2000];
+  char l[30];
   sprintf(l, "%ld", strlen(body));
   strcat(header, l);
   strcat(header, "\n");
@@ -128,8 +130,8 @@ void reply(char *body)
   while (1)
   {
     /* SSLデータ受信 */
-    char *temp = (char *)malloc(sizeof(char) * 1e5);
-    int sslret = SSL_read(ssl, temp, 1e5);
+    char *temp = (char *)malloc(sizeof(char) * BODY_SIZE);
+    int sslret = SSL_read(ssl, temp, BODY_SIZE);
     printf("%s", temp);
     int ssl_eno = SSL_get_error(ssl, sslret);
     switch (ssl_eno)
