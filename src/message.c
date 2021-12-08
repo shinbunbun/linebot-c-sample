@@ -65,7 +65,6 @@ void parse(char *buf, char *text, char *reply_token)
       json_t *message = json_object_get(event, "message");
       // message typeを取得
       const char *message_type = json_string_value(json_object_get(message, "type"));
-      // printf("%s\n", message_type);
       // message typeがtextだった場合
       if (strcmp("text", message_type) == 0)
       {

@@ -1,4 +1,4 @@
-#include "server.c"
+#include "src/server.c"
 
 int main(void)
 {

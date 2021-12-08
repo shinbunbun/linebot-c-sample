@@ -34,9 +34,6 @@ int init_server(struct server_info *my_server_info)
 
   my_server_info->size = sizeof(struct sockaddr_in);
 
-  /* char body[] = "hello world"; */
-  /* printf("%s\n", header2); */
-
   // libcryptoの全ての関数の全てのエラーメッセージをload
   SSL_load_error_strings();
   // 使用可能なcipherとdigestアルゴリズムを登録
@@ -89,13 +86,12 @@ void receive_SSL_data(SSL *ssl, char *header, char *body)
     // クライアントからのデータをいれるメモリを確保
     /* char temp[(int)1e5]; */
     char *temp = (char *)malloc(sizeof(char) * LARGE_BUF_SIZE);
-    /* printf(sizeof(temp)); */
 
     /* SSLデータ受信 */
     int r = SSL_read(ssl, temp, LARGE_BUF_SIZE);
-    printf("%s", temp);
     if (r == 0)
       break;
+    printf("%s", temp);
     if (i == 0)
     {
       strcpy(header, temp);
@@ -124,7 +120,7 @@ void wait_connect(struct server_info *my_server_info)
   while (1)
   {
 
-    printf("-------------waiting for client...-------------\n");
+    printf("\n-------------waiting for client...-------------\n");
 
     // レスポンス用のメモリを確保
     char *msg = (char *)malloc(sizeof(char) * LARGE_BUF_SIZE);

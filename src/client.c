@@ -27,7 +27,7 @@ typedef struct
 
 void request(http_request req)
 {
-  printf("\n【Request Start】\nTo: %s\n", req.host);
+  printf("\n【Request Start】\nHost: %s\n", req.host);
   int mysocket;
   // IPアドレス、ポート番号が入る構造体
   struct sockaddr_in server;
@@ -97,8 +97,6 @@ void request(http_request req)
   // SSL/TLSハンドシェイクを開始
   SSL_connect(ssl);
 
-  /* printf("Conntect to %s\n", host); */
-
   // headerにContent-Lengthを追加
   strcat(req.header, "\nContent-Length: ");
   char l[30];
@@ -121,6 +119,7 @@ void request(http_request req)
     int sslret = SSL_read(ssl, temp, BODY_SIZE);
     printf("%s", temp);
     int ssl_eno = SSL_get_error(ssl, sslret);
+    free(temp);
     switch (ssl_eno)
     {
     case SSL_ERROR_NONE:
