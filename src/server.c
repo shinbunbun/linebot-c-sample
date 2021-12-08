@@ -1,18 +1,7 @@
 /* https://ken-ohwada.hatenadiary.org/entry/2021/02/27/113436 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/crypto.h>
-
-#include "message.c"
 #include "hmac.c"
+#include "message.c"
 
 #define PORT 8765
 

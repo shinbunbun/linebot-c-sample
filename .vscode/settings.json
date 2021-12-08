@@ -6,6 +6,8 @@
     "jansson.h": "c",
     "type_traits": "c",
     "unistd.h": "c",
-    "in.h": "c"
+    "in.h": "c",
+    "define.h": "c",
+    "err.h": "c"
   }
 }

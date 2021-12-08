@@ -1,25 +1,7 @@
 /* https://www.lisz-works.com/entry/jansson-for-wsl */
 /* https://qiita.com/edo_m18/items/41770cba5c166f276a83 */
 
-#include <stdio.h>
-#include <jansson.h>
-#include <string.h>
-
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-
 #include "client.c"
-
-#define HEADER_SIZE 8001
-#define BODY_SIZE 22001
-#define LARGE_BUF_SIZE (HEADER_SIZE + BODY_SIZE)
 
 void create_message_obj(char *body, char *text, char *reply_token)
 {
