@@ -27,6 +27,7 @@ typedef struct
 
 void request(http_request req)
 {
+  printf("\n【Request Start】\nTo: %s\n", req.host);
   int mysocket;
   // IPアドレス、ポート番号が入る構造体
   struct sockaddr_in server;
@@ -82,7 +83,7 @@ void request(http_request req)
   ctx = SSL_CTX_new(SSLv23_client_method());
   // 証明書読み込み
   SSL_CTX_load_verify_locations(ctx, "line_server_cert/rootcacert_r3.pem", NULL);
-  printf("【Certificate】\n\n");
+  printf("\n【Certificate】\n");
   // サーバ証明書の検証
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, verify_callback);
   // SSL構造体を生成
@@ -107,13 +108,11 @@ void request(http_request req)
 
   // 送信するリクエストを作成
   snprintf(msg, sizeof(msg), "%s\n%s", req.header, req.body);
-  /* printf("%s\n", body);
-  printf("%s\n", msg); */
-  printf("%s\n", msg);
+  printf("\n【Request】\n%s\n", msg);
   // sslにバッファ（msg）を書き込む
   SSL_write(ssl, msg, strlen(msg));
 
-  printf("\n\n");
+  printf("\n【Response】\n");
   // データ受信
   while (1)
   {

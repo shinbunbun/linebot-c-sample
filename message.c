@@ -21,25 +21,14 @@
 #define BODY_SIZE 22001
 #define LARGE_BUF_SIZE (HEADER_SIZE + BODY_SIZE)
 
-void reply(char *body)
+void create_message_obj(char *body, char *text, char *reply_token)
 {
-
-  char *host = "api.line.me";
-  // 環境変数からLINEのアクセストークンを取得
-  char *token = getenv("TOKEN");
-
-  // reply APIにわたすヘッダを作成
-  char *header = (char *)malloc(sizeof(char) * HEADER_SIZE);
-  strcpy(header, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
-  strcat(header, token);
-  strcat(header, "\0");
-
-  http_request req;
-  req.header = header;
-  req.body = body;
-  req.host = host;
-
-  request(req);
+  // replyAPIに渡すbodyを作成
+  strcpy(body, "{\"replyToken\":\"");
+  strcat(body, reply_token);
+  strcat(body, "\",\"messages\":[{\"type\":\"text\",\"text\":\"");
+  strcat(body, text);
+  strcat(body, "\"}]}");
 }
 
 void parse(char *buf, char *text, char *reply_token)
@@ -89,6 +78,43 @@ void parse(char *buf, char *text, char *reply_token)
     }
   }
   return;
+}
+
+void reply(char *buf)
+{
+
+  // replyAPIに渡すbody用のメモリを確保
+  char *body = (char *)malloc(sizeof(char) * BODY_SIZE);
+
+  // メッセージ、リプライトークンを格納するメモリを確保
+  char *text = (char *)malloc(sizeof(char) * 10001);
+  char *reply_token = (char *)malloc(sizeof(char) * 33);
+  // JSONをパースしてtextとreply_tokenを取得
+  parse(buf, text, reply_token);
+
+  create_message_obj(body, text, reply_token);
+
+  char *host = "api.line.me";
+  // 環境変数からLINEのアクセストークンを取得
+  char *token = getenv("TOKEN");
+
+  // reply APIにわたすヘッダを作成
+  char *header = (char *)malloc(sizeof(char) * HEADER_SIZE);
+  strcpy(header, "POST /v2/bot/message/reply HTTP/1.1\nHost: api.line.me\nContent-Type: application/json\nAuthorization: Bearer \0");
+  strcat(header, token);
+  strcat(header, "\0");
+
+  http_request req;
+  req.header = header;
+  req.body = body;
+  req.host = host;
+
+  request(req);
+
+  free(reply_token);
+  free(body);
+  free(text);
+  free(header);
 }
 
 #ifdef DEBUG

@@ -81,21 +81,9 @@ void finish_server(struct server_info *my_server_info)
   SSL_CTX_free(my_server_info->ctx);
 }
 
-void create_reply_body(char *body, char *text, char *reply_token)
-{
-  // replyAPIに渡すbodyを作成
-  strcpy(body, "{\"replyToken\":\"");
-  strcat(body, reply_token);
-  strcat(body, "\",\"messages\":[{\"type\":\"text\",\"text\":\"");
-  strcat(body, text);
-  strcat(body, "\"}]}");
-
-  /* printf("body: %s\n", body); */
-}
-
 void receive_SSL_data(SSL *ssl, char *header, char *body)
 {
-  printf("\n【Request】\n");
+  printf("\n【Webhook】\n");
   for (int i = 0;; i++)
   {
     // クライアントからのデータをいれるメモリを確保
@@ -172,7 +160,7 @@ void wait_connect(struct server_info *my_server_info)
       // HMAC検証
       if (strcmp(sig, x_line_signature) == 0)
       {
-        printf("\nHMAC is valid\nHMAC: %s\n", sig);
+        printf("\n【HMAC verify status】\nHMAC is valid\nHMAC: %s\n", sig);
       }
       else
       {
@@ -180,19 +168,7 @@ void wait_connect(struct server_info *my_server_info)
         continue;
       }
 
-      // replyAPIに渡すbody用のメモリを確保
-      char *body = (char *)malloc(sizeof(char) * BODY_SIZE);
-
-      // メッセージ、リプライトークンを格納するメモリを確保
-      char *text = (char *)malloc(sizeof(char) * 10001);
-      char *reply_token = (char *)malloc(sizeof(char) * 33);
-      // JSONをパースしてtextとreply_tokenを取得
-      parse(buf, text, reply_token);
-
-      create_reply_body(body, text, reply_token);
-
-      // reply
-      reply(body);
+      reply(buf);
 
       // レスポンスヘッダを作成
       char header1[] = "HTTP/1.1 200 OK\nContent-Type: application/json";
@@ -205,8 +181,6 @@ void wait_connect(struct server_info *my_server_info)
       // 諸々解放
       free(msg);
       free(buf);
-      free(reply_token);
-      free(body);
     }
 
     // ソケット識別子を取得
