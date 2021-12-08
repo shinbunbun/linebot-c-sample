@@ -1,6 +1,6 @@
 # linebot-c-sample
 
-Qiita: 準備中
+Qiita: https://qiita.com/shinbunbun_/items/15c161dbb649e27ddb2d
 
 ## build
 
