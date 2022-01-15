@@ -1,0 +1,9 @@
+FROM ubuntu:latest
+COPY . /app
+WORKDIR /app
+RUN apt-get update && apt-get install -y build-essential make git libpcap-dev wget
+RUN apt remove -y openssl && wget https://www.openssl.org/source/openssl-3.0.1.tar.gz --no-check-certificate && tar -xzvf openssl-3.0.1.tar.gz && cd openssl-3.0.1 && ./config && make && make test && make install && ./Configure && ln -s /usr/local/bin/openssl /usr/bin/ && ln -s libssl.so.3 libssl.so && ldconfig
+RUN openssl version
+RUN wget https://github.com/akheron/jansson/releases/download/v2.14/jansson-2.14.tar.gz --no-check-certificate && tar -zxvf jansson-2.14.tar.gz && cd jansson-2.14 && ./configure && make && make install 
+RUN make build
+CMD ["make", "run"]
