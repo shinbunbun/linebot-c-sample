@@ -6,13 +6,25 @@
 #include <resolv.h>
 #include <string.h>
 
-int k64_encode(const char *data, char *const buf, size_t buf_size)
+int k64_encode(const char *hmac, int hmaclen, char *const encoded)
 {
 
   BIO *mem = BIO_new(BIO_s_mem());
-  BIO_puts(mem, data);
-  BIO_read(mem, buf, buf_size);
-  printf("%s\n", buf);
+  printf("%s\n", hmac);
+  // int buf_len = BIO_puts(mem, hmac);
+  BIO *b64 = BIO_new(BIO_f_base64());
+  BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+  // BIO_set_mem_eof_return(b64, BIO_NOCLOSE);
+  BIO_push(b64, mem);
+  BIO_write(b64, hmac, hmaclen);
+  BIO_flush(b64);
+
+  BIO_seek(mem, 0);
+  // BIO_write(mem, "\n", 1);
+  int buf_len = BIO_read(mem, encoded, 300);
+  encoded[buf_len] = '\0';
+  printf("%s\n", encoded);
+  BIO_free_all(mem);
 
   /* BIO *bio, *b64;
 
@@ -41,7 +53,7 @@ void create_hmac(char *data, char *buf, size_t buf_size)
 
   if (HMAC(EVP_sha256(), key, keylen, data, datalen, res, &reslen))
   {
-    if (k64_encode(res, buf, buf_size) == -1)
+    if (k64_encode(res, reslen, buf) == -1)
     {
       exit(EXIT_FAILURE);
     }
