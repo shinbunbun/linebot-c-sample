@@ -1,25 +1,30 @@
 /* https://kaworu.jpn.org/kaworu/2007-03-22-1.php */
 
 #include <openssl/hmac.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 #include <resolv.h>
 #include <string.h>
 
-int k64_encode(const char *data, size_t datalen, char *const buf, size_t len)
+int k64_encode(const char *hmac, int hmaclen, char *const encoded)
 {
-  int rv;
 
-  rv = b64_ntop(data, datalen, buf, (len / sizeof(buf[0])));
-  if (rv == -1)
-  {
-    fprintf(stderr, "b64_ntop: error encode base64");
-    return (rv);
-  }
-  return (rv);
+  BIO *mem = BIO_new(BIO_s_mem());
+  BIO *b64 = BIO_new(BIO_f_base64());
+  BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+  BIO_push(b64, mem);
+  BIO_write(b64, hmac, hmaclen);
+  BIO_flush(b64);
+
+  BIO_seek(mem, 0);
+  int buf_len = BIO_read(mem, encoded, 300);
+  encoded[buf_len] = '\0';
+  BIO_free_all(mem);
 }
 
 void create_hmac(char *data, char *buf, size_t buf_size)
 {
-  u_int reslen;
+  unsigned int reslen;
   char res[64 + 1];
   char *key = getenv("SECRET");
   size_t keylen = strlen(key);
@@ -28,7 +33,7 @@ void create_hmac(char *data, char *buf, size_t buf_size)
 
   if (HMAC(EVP_sha256(), key, keylen, data, datalen, res, &reslen))
   {
-    if (k64_encode(res, reslen, buf, buf_size) == -1)
+    if (k64_encode(res, reslen, buf) == -1)
     {
       exit(EXIT_FAILURE);
     }

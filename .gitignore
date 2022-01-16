@@ -9,3 +9,4 @@ cert
 out
 hmac
 verify
+line.env

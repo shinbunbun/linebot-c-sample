@@ -78,7 +78,7 @@ void enable_hostname_validation(SSL *ssl, const char *hostname)
 
   param = SSL_get0_param(ssl);
 
-  X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+  X509_VERIFY_PARAM_set_hostflags(param, 0x4);
   if (!X509_VERIFY_PARAM_set1_host(param, hostname, 0))
   {
     ERR_print_errors_fp(stderr);
