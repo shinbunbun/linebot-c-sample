@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  webhook:
+    build: .
+    ports: 
+      - 8765:8765
+    env_file:
+      - line.env
