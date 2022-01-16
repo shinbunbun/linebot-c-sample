@@ -10,7 +10,6 @@ int k64_encode(const char *hmac, int hmaclen, char *const encoded)
 {
 
   BIO *mem = BIO_new(BIO_s_mem());
-  printf("%s\n", hmac);
   BIO *b64 = BIO_new(BIO_f_base64());
   BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
   BIO_push(b64, mem);
@@ -20,7 +19,6 @@ int k64_encode(const char *hmac, int hmaclen, char *const encoded)
   BIO_seek(mem, 0);
   int buf_len = BIO_read(mem, encoded, 300);
   encoded[buf_len] = '\0';
-  printf("%s\n", encoded);
   BIO_free_all(mem);
 }
 
