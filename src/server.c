@@ -18,8 +18,8 @@ struct server_info
 int init_server(struct server_info *my_server_info)
 {
   // サーバ証明書と秘密鍵のパス
-  char crt_file[] = "cert/fullchain1.pem";
-  char key_file[] = "cert/key.pem";
+  char crt_file[] = "cert/fullchain.pem";
+  char key_file[] = "cert/privkey.pem";
 
   my_server_info->size = sizeof(struct sockaddr_in);
 
