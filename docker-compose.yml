@@ -7,3 +7,8 @@ services:
       - 8765:8765
     env_file:
       - line.env
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./cert_tmp:/cert_tmp
+    command: ["--version"]
