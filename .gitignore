@@ -1,12 +1,12 @@
-/.DS_Store
+.DS_Store
 /main.dSYM
-server.crt
-server.csr
-server.key
 main
-cert
+cert/**
+cert_tmp/**
 *.out
 out
 hmac
 verify
 line.env
+cert2
+!.gitkeep
