@@ -10,5 +10,5 @@ services:
   certbot:
     image: certbot/certbot:latest
     volumes:
-      - ./cert_tmp:/cert_tmp
+      - ./cert_tmp:/etc/letsencrypt/live
     command: ["--version"]
